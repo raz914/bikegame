@@ -8,9 +8,17 @@ export const WORLD_TUNING = {
 }
 
 export const INPUT_TUNING = {
-    riderWeightStep: 1,
-    throttleStep: 2,
-    brakeStep: 1,
+    leftPadDeadZone: 0.12,
+    rightPadDeadZone: 0.12,
+    riderWeightRange: 1,
+    throttleRange: 1,
+    brakeRange: 1,
+    riderWeightCurve: 1.05,
+    throttleCurve: 1.1,
+    brakeCurve: 1.1,
+    keyboardWeightValue: 0.85,
+    keyboardThrottleValue: 1,
+    keyboardBrakeValue: 0.92,
 }
 
 export const DRIVE_TUNING = {
