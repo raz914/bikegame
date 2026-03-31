@@ -65,16 +65,6 @@ export const BALANCE_DRIFT_BASE = BALANCE_TUNING.driftBase
 export const BALANCE_DRIFT_SPEED_FACTOR = BALANCE_TUNING.driftSpeedFactor
 export const BRAKE_STRENGTH = DRIVE_TUNING.brakeStrength
 
-// ─── Initial State ────────────────────────────────────
-const createDebugSnapshot = () => ({
-    riderWeight: 0,
-    throttle: 0,
-    brake: 0,
-    speed: 0,
-    pitchAngle: 0,
-    wheelieValid: false,
-})
-
 const initialState = (persisted = {}) => ({
     speed: 0,
     wheelieAngle: 0,       // degrees: 0 = flat, 90 = vertical
@@ -91,8 +81,6 @@ const initialState = (persisted = {}) => ({
     perfectBalance: false,
     crashed: false,
     finished: false,
-    debugEnabled: false,
-    debug: createDebugSnapshot(),
 })
 
 // ─── Store Context ────────────────────────────────────
@@ -121,7 +109,10 @@ export function GameStoreProvider({ children }) {
         listenersRef.current.forEach((fn) => fn(stateRef.current))
     }, [])
 
-    const store = useMemo(() => ({ getState, setState, subscribe, reset }), [getState, setState, subscribe, reset])
+    const store = useMemo(
+        () => ({ getState, setState, subscribe, reset }),
+        [getState, setState, subscribe, reset],
+    )
 
     return (
         <GameStoreContext.Provider value={store}>

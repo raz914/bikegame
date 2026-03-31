@@ -1,25 +1,41 @@
+import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Sky } from '@react-three/drei'
+import { OrbitControls, Sky } from '@react-three/drei'
 import { useGameStore, MAX_SPEED } from '../store/useGameStore'
+import { useRiderDebugPanelOpen } from '../store/useRiderTuningStore'
 import Road from './Road'
 import Bike from './Bike'
 
 function CameraRig() {
     const store = useGameStore()
+    const throttleBlendRef = useRef(0)
 
-    useFrame((state) => {
-        const { position, speed, wheelieAngle } = store.getState()
+    useFrame((state, delta) => {
+        const { position, speed, throttle, wheelieAngle } = store.getState()
+
         const speedRatio = speed / MAX_SPEED
+        const throttleRatio = Math.max(0, Math.min(1, throttle))
+        const dt = Math.min(delta, 0.05)
+        const blendLerp = 1 - Math.exp(-dt * 3.2)
+        throttleBlendRef.current += (throttleRatio - throttleBlendRef.current) * blendLerp
+        const blendProgress = throttleBlendRef.current
+        const throttleBlend = blendProgress * blendProgress * blendProgress * (blendProgress * (blendProgress * 6 - 15) + 10)
         const aspect = state.camera.aspect
         const portraitFactor = Math.max(0, Math.min(1, (1.15 - aspect) / 0.55))
-        const followDistance = 4.5 - portraitFactor * 1.2
-        const lookAhead = 6 - portraitFactor * 4.8
+        const sideFollowDistance = 4.5 - portraitFactor * 1.2
+        const rearFollowDistance = 8 - portraitFactor * 0.7 + speedRatio * 0.8
+        const followDistance = sideFollowDistance + (rearFollowDistance - sideFollowDistance) * throttleBlend
+        const sideDepth = 8.8 - portraitFactor * 1.1 - speedRatio * 0.7
+        const rearDepth = 1.15 + portraitFactor * 0.45
+        const cameraDepth = sideDepth + (rearDepth - sideDepth) * throttleBlend
+        const sideLookAhead = 6 - portraitFactor * 4.8
+        const rearLookAhead = 2.4 - portraitFactor * 1.2
+        const lookAhead = sideLookAhead + (rearLookAhead - sideLookAhead) * throttleBlend
         const baseHeight = 3.2 + portraitFactor * 0.55
-        const baseDepth = 8.8 - portraitFactor * 1.1
         const targetX = position - followDistance
-        const camX = state.camera.position.x + (targetX - state.camera.position.x) * 0.05
-        const camY = state.camera.position.y + ((baseHeight + speedRatio * 1.1 + wheelieAngle * 0.015) - state.camera.position.y) * 0.05
-        const camZ = state.camera.position.z + ((baseDepth - speedRatio * 0.7) - state.camera.position.z) * 0.05
+        const camX = state.camera.position.x + (targetX - state.camera.position.x) * 0.04
+        const camY = state.camera.position.y + ((baseHeight + speedRatio * 1.1 + wheelieAngle * 0.015) - state.camera.position.y) * 0.04
+        const camZ = state.camera.position.z + (cameraDepth - state.camera.position.z) * 0.04
 
         state.camera.position.set(camX, camY, camZ)
         state.camera.lookAt(position + lookAhead, 1 + wheelieAngle * 0.02, 0)
@@ -29,6 +45,8 @@ function CameraRig() {
 }
 
 export default function GameScene() {
+    const isRiderDebugOpen = useRiderDebugPanelOpen()
+
     return (
         <Canvas
             shadows
@@ -66,7 +84,19 @@ export default function GameScene() {
             />
             <directionalLight position={[-15, 10, -20]} color="#8ec5ff" intensity={0.35} />
 
-            <CameraRig />
+            {isRiderDebugOpen ? (
+                <OrbitControls
+                    makeDefault
+                    target={[0, 1.6, 0]}
+                    enableDamping
+                    dampingFactor={0.08}
+                    minDistance={3}
+                    maxDistance={20}
+                    maxPolarAngle={Math.PI * 0.48}
+                />
+            ) : (
+                <CameraRig />
+            )}
             <Road />
             <Bike />
         </Canvas>

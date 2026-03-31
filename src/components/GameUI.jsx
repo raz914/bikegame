@@ -11,6 +11,7 @@ import ControlPad from './game-ui/ControlPad'
 import GameHUD from './game-ui/GameHUD'
 import GameOverlays from './game-ui/GameOverlays'
 import ProgressTrack from './game-ui/ProgressTrack'
+import RiderDebugPanel from './game-ui/RiderDebugPanel'
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 
@@ -249,6 +250,8 @@ export default function GameUI() {
                 progressPct={progressPct}
                 angleColor={angleColor}
             />
+
+            <RiderDebugPanel />
 
             <div
                 className="pointer-events-auto px-3 sm:px-5 sm:pb-6"
