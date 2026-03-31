@@ -1,18 +1,26 @@
 export default function ProgressTrack({ progressPct, compact = false, className = '' }) {
-    const containerClassName = compact
-        ? 'rounded-full border border-white/12 bg-black/25 p-1 backdrop-blur-sm'
-        : 'rounded-full border border-white/12 bg-black/25 p-1.5 backdrop-blur-sm'
-
-    const barClassName = compact ? 'h-1.5 rounded-full bg-white/10' : 'h-1.5 rounded-full bg-white/10'
-
     return (
-        <div className={`${containerClassName} ${className}`.trim()}>
-            <div className={barClassName}>
-                <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-300 via-orange-400 to-red-500 transition-all duration-100"
-                    style={{ width: `${progressPct}%` }}
-                />
-            </div>
+        <div
+            className={className}
+            style={{
+                width: '100%',
+                height: compact ? '4px' : '6px',
+                background: 'rgba(255,255,255,0.06)',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.04)',
+            }}
+        >
+            <div
+                style={{
+                    width: `${progressPct}%`,
+                    height: '100%',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(90deg, #FF6B00, #FF8C33, #ef4444)',
+                    boxShadow: '0 0 10px rgba(255,107,0,0.4)',
+                    transition: 'width 0.1s linear',
+                }}
+            />
         </div>
     )
 }

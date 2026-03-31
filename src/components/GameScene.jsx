@@ -1,8 +1,7 @@
 import { useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Sky } from '@react-three/drei'
+import { Sky } from '@react-three/drei'
 import { useGameStore, MAX_SPEED } from '../store/useGameStore'
-import { useRiderDebugPanelOpen } from '../store/useRiderTuningStore'
 import Road from './Road'
 import Bike from './Bike'
 
@@ -45,7 +44,6 @@ function CameraRig() {
 }
 
 export default function GameScene() {
-    const isRiderDebugOpen = useRiderDebugPanelOpen()
 
     return (
         <Canvas
@@ -84,19 +82,7 @@ export default function GameScene() {
             />
             <directionalLight position={[-15, 10, -20]} color="#8ec5ff" intensity={0.35} />
 
-            {isRiderDebugOpen ? (
-                <OrbitControls
-                    makeDefault
-                    target={[0, 1.6, 0]}
-                    enableDamping
-                    dampingFactor={0.08}
-                    minDistance={3}
-                    maxDistance={20}
-                    maxPolarAngle={Math.PI * 0.48}
-                />
-            ) : (
-                <CameraRig />
-            )}
+            <CameraRig />
             <Road />
             <Bike />
         </Canvas>

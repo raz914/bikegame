@@ -10,8 +10,7 @@ import {
 import ControlPad from './game-ui/ControlPad'
 import GameHUD from './game-ui/GameHUD'
 import GameOverlays from './game-ui/GameOverlays'
-import ProgressTrack from './game-ui/ProgressTrack'
-import RiderDebugPanel from './game-ui/RiderDebugPanel'
+import WheelieStreak from './game-ui/WheelieStreak'
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
 
@@ -37,6 +36,7 @@ export default function GameUI() {
     const throttle = useGameState((s) => s.throttle)
     const brake = useGameState((s) => s.brake)
     const perfectBalance = useGameState((s) => s.perfectBalance)
+    const wheelieValid = useGameState((s) => s.wheelieValid)
     const crashed = useGameState((s) => s.crashed)
     const finished = useGameState((s) => s.finished)
     const leftPointerIdRef = useRef(null)
@@ -251,16 +251,42 @@ export default function GameUI() {
                 angleColor={angleColor}
             />
 
-            <RiderDebugPanel />
+            {/* Wheelie streak display — centered below HUD */}
+            <div
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                    paddingTop: '15vh',
+                }}
+            >
+                <WheelieStreak
+                    wheelieValid={wheelieValid}
+                    wheelieDistance={wheelieDistance}
+                    score={score}
+                />
+            </div>
 
             <div
-                className="pointer-events-auto px-3 sm:px-5 sm:pb-6"
-                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 4.75rem)' }}
+                className="pointer-events-auto"
+                style={{
+                    padding: '0 0.75rem',
+                    paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
+                }}
             >
-                <div className="mx-auto grid max-w-xl grid-cols-2 items-end gap-3 sm:grid-cols-[minmax(180px,1fr)_128px_minmax(180px,1fr)] sm:gap-4">
+                <div
+                    style={{
+                        maxWidth: '500px',
+                        margin: '0 auto',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-end',
+                    }}
+                >
                     <ControlPad
                         variant="weight"
-                        alignClassName="justify-self-start"
+                        alignClassName=""
                         mobileLabel="Weight"
                         zoneLabel="Left Zone"
                         label="Weight"
@@ -277,16 +303,9 @@ export default function GameUI() {
                         onLostPointerCapture={handleLeftPointerEnd}
                     />
 
-                    <div className="hidden h-full flex-col justify-end pb-3 sm:flex">
-                        <div className="mx-auto mb-2 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/55">
-                            Progress
-                        </div>
-                        <ProgressTrack progressPct={progressPct} className="mx-auto w-full max-w-[170px]" />
-                    </div>
-
                     <ControlPad
                         variant="drive"
-                        alignClassName="justify-self-end"
+                        alignClassName=""
                         mobileLabel="Drive"
                         zoneLabel="Right Zone"
                         label="Drive"
