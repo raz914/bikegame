@@ -71,12 +71,17 @@ const initialState = (persisted = {}) => ({
     position: 0,           // X along road
     distance: 0,           // road progress
     wheelieDistance: 0,    // distance while wheelie state is valid
+    currentWheelieDistance: 0,
     wheelieTime: 0,        // seconds spent in wheelie
+    rawCurrentWheelieScore: 0,
+    currentWheelieScore: 0,
+    rawScore: 0,
     score: 0,
     bestScore: persisted.bestScore ?? 0,
     riderWeight: 0,        // -1 = back, 1 = forward
     throttle: 0,           // 0..1
     brake: 0,              // 0..1
+    paused: false,
     wheelieValid: false,
     perfectBalance: false,
     crashed: false,

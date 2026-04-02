@@ -62,8 +62,8 @@ export default function StageSelectScreen() {
                             style={{
                                 width: '100%',
                                 aspectRatio: '16 / 9',
-                                backgroundImage: `url(${stage.thumbnail})`,
-                                backgroundSize: 'cover',
+                                backgroundImage: stage.thumbnail ? `url(${stage.thumbnail})` : stage.thumbnailGradient,
+                                backgroundSize: 'cover, cover',
                                 backgroundPosition: 'center',
                                 position: 'relative',
                             }}

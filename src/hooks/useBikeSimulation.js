@@ -30,7 +30,7 @@ export default function useBikeSimulation({
 }) {
     useFrame((_, delta) => {
         const state = store.getState()
-        if (state.crashed || state.finished) return
+        if (state.crashed || state.finished || state.paused) return
 
         const dt = Math.min(delta, 0.05)
 
@@ -38,9 +38,13 @@ export default function useBikeSimulation({
             speed,
             wheelieAngle,
             position,
+            rawScore,
             score,
             wheelieTime,
             wheelieDistance,
+            currentWheelieDistance,
+            rawCurrentWheelieScore,
+            currentWheelieScore,
             bestScore,
         } = state
         const throttle = clamp01(state.throttle)
@@ -79,7 +83,7 @@ export default function useBikeSimulation({
                 wheelieAngle: MAX_WHEELIE_ANGLE,
                 wheelieValid: false,
                 perfectBalance: false,
-                bestScore: Math.max(bestScore, Math.floor(score)),
+                bestScore: Math.max(bestScore, Math.floor(rawScore)),
             })
             return
         }
@@ -104,7 +108,7 @@ export default function useBikeSimulation({
                 speed: 0,
                 wheelieValid: false,
                 perfectBalance: false,
-                bestScore: Math.max(bestScore, Math.floor(score)),
+                bestScore: Math.max(bestScore, Math.floor(rawScore)),
             })
             return
         }
@@ -116,23 +120,35 @@ export default function useBikeSimulation({
         if (wheelieValid) {
             wheelieTime += dt
             wheelieDistance += positionDelta
+            currentWheelieDistance += positionDelta
             points = speed * dt * (1 + wheelieAngle / 38)
             if (perfectBalance) {
                 points *= WHEELIE_SCORE_MULTIPLIER
             }
+            rawCurrentWheelieScore += points
+        } else {
+            currentWheelieDistance = 0
+            rawCurrentWheelieScore = 0
+            currentWheelieScore = 0
         }
 
-        score += points
-        bestScore = Math.max(bestScore, Math.floor(score))
+        rawScore += points
+        score = Math.floor(rawScore)
+        currentWheelieScore = Math.floor(rawCurrentWheelieScore)
+        bestScore = Math.max(bestScore, score)
 
         store.setState({
             speed,
             wheelieAngle,
             position,
-            score: Math.floor(score),
+            rawScore,
+            score,
             bestScore,
             wheelieTime,
             wheelieDistance,
+            currentWheelieDistance,
+            rawCurrentWheelieScore,
+            currentWheelieScore,
             distance: Math.floor(position),
             wheelieValid,
             perfectBalance,

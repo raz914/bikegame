@@ -7,6 +7,7 @@ import {
     PERFECT_WHEELIE_WINDOW,
     INPUT_TUNING,
 } from '../store/useGameStore'
+import { returnToMenu } from '../store/useUIStore'
 import ControlPad from './game-ui/ControlPad'
 import GameHUD from './game-ui/GameHUD'
 import GameOverlays from './game-ui/GameOverlays'
@@ -24,6 +25,74 @@ function applyAxisResponse(value, deadZone, curve) {
     return sign * Math.pow(normalized, curve)
 }
 
+function BurgerIcon() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+    )
+}
+
+function PauseMenu({ onResume, onMenu }) {
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(5, 8, 15, 0.42)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                zIndex: 40,
+                pointerEvents: 'auto',
+                padding: '1.25rem',
+            }}
+        >
+            <div
+                className="animate-fade-in-scale"
+                style={{
+                    width: '100%',
+                    maxWidth: '320px',
+                    borderRadius: '1.5rem',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'linear-gradient(180deg, rgba(24,28,37,0.96) 0%, rgba(13,16,24,0.98) 100%)',
+                    boxShadow: '0 20px 70px rgba(0,0,0,0.45)',
+                    padding: '1.5rem',
+                    textAlign: 'center',
+                }}
+            >
+                <div
+                    className="game-title"
+                    style={{ fontSize: '1.5rem', marginBottom: '0.45rem' }}
+                >
+                    Paused
+                </div>
+                <p
+                    style={{
+                        margin: '0 0 1.25rem',
+                        color: 'rgba(255,255,255,0.5)',
+                        fontSize: '0.78rem',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                    }}
+                >
+                    Gameplay is on hold
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                    <button className="game-btn game-btn-primary" onClick={onResume} style={{ width: '100%' }}>
+                        Resume
+                    </button>
+                    <button className="game-btn game-btn-dark" onClick={onMenu} style={{ width: '100%' }}>
+                        Main Menu
+                    </button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 export default function GameUI() {
     const store = useGameStore()
     const speed = useGameState((s) => Math.floor(s.speed))
@@ -31,10 +100,13 @@ export default function GameUI() {
     const bestScore = useGameState((s) => s.bestScore)
     const distance = useGameState((s) => s.distance)
     const wheelieDistance = useGameState((s) => Math.floor(s.wheelieDistance))
+    const currentWheelieDistance = useGameState((s) => Math.floor(s.currentWheelieDistance))
+    const currentWheelieScore = useGameState((s) => s.currentWheelieScore)
     const wheelieAngle = useGameState((s) => Math.floor(s.wheelieAngle))
     const riderWeight = useGameState((s) => s.riderWeight)
     const throttle = useGameState((s) => s.throttle)
     const brake = useGameState((s) => s.brake)
+    const paused = useGameState((s) => s.paused)
     const perfectBalance = useGameState((s) => s.perfectBalance)
     const wheelieValid = useGameState((s) => s.wheelieValid)
     const crashed = useGameState((s) => s.crashed)
@@ -171,24 +243,57 @@ export default function GameUI() {
         store.reset()
     }, [store])
 
+    const handlePauseToggle = useCallback(() => {
+        if (crashed || finished) return
+        store.setState((prev) => ({
+            ...prev,
+            paused: !prev.paused,
+            throttle: 0,
+            brake: 0,
+            riderWeight: 0,
+        }))
+        leftPointerIdRef.current = null
+        rightPointerIdRef.current = null
+    }, [crashed, finished, store])
+
+    const handleResume = useCallback(() => {
+        store.setState((prev) => ({
+            ...prev,
+            paused: false,
+        }))
+    }, [store])
+
+    const handleReturnToMenu = useCallback(() => {
+        handleRestart()
+        returnToMenu()
+    }, [handleRestart])
+
     useEffect(() => {
         const onKeyDown = (event) => {
+            if (event.key === 'Escape' && !crashed && !finished) {
+                event.preventDefault()
+                handlePauseToggle()
+            }
             if (event.key === 'ArrowUp' || event.key === 'w' || event.key === ' ') {
+                if (paused) return
                 event.preventDefault()
                 keyStateRef.current.throttle = true
                 syncKeyboardControls()
             }
             if (event.key === 'ArrowDown' || event.key === 's') {
+                if (paused) return
                 event.preventDefault()
                 keyStateRef.current.brake = true
                 syncKeyboardControls()
             }
             if (event.key === 'ArrowLeft' || event.key === 'a') {
+                if (paused) return
                 event.preventDefault()
                 keyStateRef.current.weightBack = true
                 syncKeyboardControls()
             }
             if (event.key === 'ArrowRight' || event.key === 'd') {
+                if (paused) return
                 event.preventDefault()
                 keyStateRef.current.weightForward = true
                 syncKeyboardControls()
@@ -224,7 +329,7 @@ export default function GameUI() {
             window.removeEventListener('keydown', onKeyDown)
             window.removeEventListener('keyup', onKeyUp)
         }
-    }, [crashed, finished, handleRestart, syncKeyboardControls])
+    }, [crashed, finished, handlePauseToggle, handleRestart, paused, syncKeyboardControls])
 
     const progressPct = Math.min((distance / ROAD_LENGTH) * 100, 100)
     const angleColor = wheelieAngle > 52 ? '#ef4444' : wheelieAngle > 36 ? '#f59e0b' : '#f8fafc'
@@ -237,6 +342,39 @@ export default function GameUI() {
 
     return (
         <div className="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between select-none">
+            {!crashed && !finished && (
+                <div
+                    className="pointer-events-auto"
+                    style={{
+                        position: 'absolute',
+                        top: 'calc(env(safe-area-inset-top, 0px) + 4.15rem)',
+                        right: '0.9rem',
+                        zIndex: 30,
+                    }}
+                >
+                    <button
+                        onClick={handlePauseToggle}
+                        aria-label={paused ? 'Resume game' : 'Open pause menu'}
+                        style={{
+                            width: '3rem',
+                            height: '3rem',
+                            borderRadius: '999px',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            background: 'rgba(10,12,18,0.54)',
+                            color: '#f8fafc',
+                            display: 'grid',
+                            placeItems: 'center',
+                            backdropFilter: 'blur(10px)',
+                            WebkitBackdropFilter: 'blur(10px)',
+                            boxShadow: '0 12px 35px rgba(0,0,0,0.28)',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <BurgerIcon />
+                    </button>
+                </div>
+            )}
+
             <GameHUD
                 speed={speed}
                 wheelieAngle={wheelieAngle}
@@ -262,9 +400,10 @@ export default function GameUI() {
                 }}
             >
                 <WheelieStreak
+                    key={wheelieValid ? 'wheelie-active' : 'wheelie-idle'}
                     wheelieValid={wheelieValid}
-                    wheelieDistance={wheelieDistance}
-                    score={score}
+                    wheelieDistance={currentWheelieDistance}
+                    wheelieScore={currentWheelieScore}
                 />
             </div>
 
@@ -272,7 +411,7 @@ export default function GameUI() {
                 className="pointer-events-auto"
                 style={{
                     padding: '0 0.75rem',
-                    paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.25rem)',
+                    paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4.6rem)',
                 }}
             >
                 <div
@@ -333,6 +472,10 @@ export default function GameUI() {
                 roadLength={ROAD_LENGTH}
                 onRestart={handleRestart}
             />
+
+            {paused && !crashed && !finished && (
+                <PauseMenu onResume={handleResume} onMenu={handleReturnToMenu} />
+            )}
         </div>
     )
 }

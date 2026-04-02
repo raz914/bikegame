@@ -4,6 +4,7 @@ export const STAGES = [
         name: 'Highway',
         description: 'Open road, golden sunset',
         thumbnail: '/images/stage-highway.png',
+        thumbnailGradient: 'linear-gradient(135deg, #f4b36f 0%, #ef7f42 48%, #4e4f78 100%)',
         locked: false,
     },
     {
@@ -11,14 +12,32 @@ export const STAGES = [
         name: 'City Streets',
         description: 'Neon-lit urban jungle',
         thumbnail: '/images/stage-city.png',
-        locked: true,
+        thumbnailGradient: 'linear-gradient(135deg, #2e315d 0%, #3a5bdc 46%, #1ce1ff 100%)',
+        locked: false,
     },
     {
         id: 'desert',
         name: 'Desert Run',
         description: 'Blazing heat, endless sand',
         thumbnail: '/images/stage-desert.png',
-        locked: true,
+        thumbnailGradient: 'linear-gradient(135deg, #e2c07b 0%, #cf8e45 52%, #8d5937 100%)',
+        locked: false,
+    },
+    {
+        id: 'night',
+        name: 'Night Track',
+        description: 'Moonlit sprint under city glow',
+        thumbnail: '',
+        thumbnailGradient: 'linear-gradient(135deg, #030712 0%, #13203f 50%, #2b5cff 100%)',
+        locked: false,
+    },
+    {
+        id: 'jungle',
+        name: 'Jungle Run',
+        description: 'Dense canopy, humid green tunnel',
+        thumbnail: '',
+        thumbnailGradient: 'linear-gradient(135deg, #19351f 0%, #255c2f 45%, #8fcf58 100%)',
+        locked: false,
     },
 ]
 

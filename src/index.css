@@ -180,18 +180,16 @@
   /* Header bar for selection screens */
   .game-header {
     width: 100%;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
     align-items: center;
-    justify-content: center;
+    column-gap: 0.75rem;
     padding: 1rem 1rem 0.5rem;
-    position: relative;
   }
 
   .game-back-btn {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    position: static;
+    justify-self: start;
     font-family: var(--font-game);
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -207,7 +205,36 @@
   }
 
   .game-back-btn:active {
-    transform: translateY(-50%) scale(0.94);
+    transform: scale(0.94);
+  }
+
+  .game-header .game-title {
+    justify-self: center;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .game-header::after {
+    content: '';
+    width: 5.75rem;
+    justify-self: end;
+  }
+
+  @media (max-width: 480px) {
+    .game-header {
+      grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+      row-gap: 0.5rem;
+    }
+
+    .game-header .game-title {
+      justify-self: start;
+      text-align: left;
+      grid-column: 1 / -1;
+    }
+
+    .game-header::after {
+      display: none;
+    }
   }
 
   /* Ad banner placeholder */

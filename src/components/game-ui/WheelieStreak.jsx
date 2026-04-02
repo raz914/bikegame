@@ -5,49 +5,27 @@ import { useEffect, useRef, useState } from 'react'
  * for more than 2 seconds. Displays live score with multiplier that increases
  * every 10 meters of consistent wheelie distance.
  */
-export default function WheelieStreak({ wheelieValid, wheelieDistance, score }) {
+export default function WheelieStreak({ wheelieValid, wheelieDistance, wheelieScore }) {
     const [visible, setVisible] = useState(false)
-    const [streakScore, setStreakScore] = useState(0)
-    const wheelieStartTimeRef = useRef(null)
-    const prevWheelieValidRef = useRef(false)
-    const streakBaseScoreRef = useRef(0)
-
-    useEffect(() => {
-        // Wheelie just started
-        if (wheelieValid && !prevWheelieValidRef.current) {
-            wheelieStartTimeRef.current = Date.now()
-            streakBaseScoreRef.current = score
-            setVisible(false)
-        }
-
-        // Wheelie just ended
-        if (!wheelieValid && prevWheelieValidRef.current) {
-            wheelieStartTimeRef.current = null
-            setVisible(false)
-        }
-
-        prevWheelieValidRef.current = wheelieValid
-    }, [wheelieValid, score])
+    const timerRef = useRef(null)
 
     useEffect(() => {
         if (!wheelieValid) return
 
-        const interval = setInterval(() => {
-            if (!wheelieStartTimeRef.current) return
-            const elapsed = Date.now() - wheelieStartTimeRef.current
-            if (elapsed >= 2000) {
-                setVisible(true)
-                setStreakScore(score - streakBaseScoreRef.current)
-            }
-        }, 100)
+        timerRef.current = window.setTimeout(() => {
+            setVisible(true)
+        }, 2000)
 
-        return () => clearInterval(interval)
-    }, [wheelieValid, score])
+        return () => {
+            window.clearTimeout(timerRef.current)
+            timerRef.current = null
+        }
+    }, [wheelieValid])
 
     // Multiplier: 1x base, +1x for every 10m of wheelie distance
     const multiplier = 1 + Math.floor(wheelieDistance / 10)
 
-    if (!visible) return null
+    if (!wheelieValid || !visible) return null
 
     return (
         <div
@@ -94,7 +72,7 @@ export default function WheelieStreak({ wheelieValid, wheelieDistance, score }) 
                         textShadow: '0 2px 8px rgba(0,0,0,0.5)',
                     }}
                 >
-                    +{streakScore.toLocaleString()}
+                    +{Math.max(1, wheelieScore).toLocaleString()}
                 </span>
                 {multiplier > 1 && (
                     <span
@@ -126,9 +104,9 @@ export default function WheelieStreak({ wheelieValid, wheelieDistance, score }) 
                     color: 'rgba(255,255,255,0.4)',
                     letterSpacing: '0.1em',
                 }}
-            >
-                {wheelieDistance}m wheelie
-            </span>
+                >
+                    {wheelieDistance}m wheelie
+                </span>
         </div>
     )
 }
