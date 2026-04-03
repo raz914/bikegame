@@ -2,7 +2,8 @@ import { useMemo, useRef } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Sky, Stars } from '@react-three/drei'
 import { ACESFilmicToneMapping, SRGBColorSpace, Vector3 } from 'three'
-import { useGameStore, MAX_SPEED, ROAD_LENGTH } from '../store/useGameStore'
+import { useGameStore, ROAD_LENGTH } from '../store/useGameStore'
+import { getGameplayTuning } from '../store/useGameplayTuningStore'
 import { useUIState } from '../store/useUIStore'
 import { STAGES } from '../data/gameData'
 import { getStageEnvironment } from '../data/stageEnvironments'
@@ -20,7 +21,8 @@ function CameraRig() {
         const { position, speed, throttle, brake, wheelieAngle, paused } = store.getState()
         if (paused) return
 
-        const speedRatio = Math.max(0, Math.min(1, speed / MAX_SPEED))
+        const maxSpeed = getGameplayTuning().drive.maxSpeed
+        const speedRatio = Math.max(0, Math.min(1, speed / maxSpeed))
         const throttleRatio = Math.max(0, Math.min(1, throttle))
         const brakeRatio = Math.max(0, Math.min(1, brake))
         const dt = Math.min(delta, 0.05)
@@ -28,7 +30,7 @@ function CameraRig() {
         speedRatioRef.current += (speedRatio - speedRatioRef.current) * speedLerp
         const speedDelta = speed - previousSpeedRef.current
         previousSpeedRef.current = speed
-        const accelerationRatio = Math.max(0, Math.min(1, speedDelta / Math.max(dt * MAX_SPEED * 0.55, 0.0001)))
+        const accelerationRatio = Math.max(0, Math.min(1, speedDelta / Math.max(dt * maxSpeed * 0.55, 0.0001)))
         const targetRearBias = Math.max(
             0,
             Math.min(1, speedRatioRef.current * 0.9 + throttleRatio * 0.08 + accelerationRatio * 0.12 - brakeRatio * 0.08),

@@ -1,0 +1,82 @@
+export const DEFAULT_GAMEPLAY_TUNING = {
+    drive: {
+        maxSpeed: 30,
+        acceleration: 11,
+        friction: 4.5,
+        brakeStrength: 3.5,
+        throttleDragReduction: 0.25,
+        overRotationSpeedPenalty: 7,
+        overRotationAngleOffset: 8,
+    },
+
+    pitch: {
+        liftTorque: 360,
+        settleTorque: 280,
+        gravityTorque: 160,
+        angularDamping: 1,
+        maxAngle: 60,
+        validMinAngle: 12,
+        validMaxMargin: 4,
+    },
+
+    riderControl: {
+        throttleLiftBase: 1.18,
+        leanBackLiftBonus: 1.05,
+        speedLiftFactor: 24,
+        leanBackDirectLift: 26,
+        launchAssistTorque: 220,
+        launchAssistMaxAngle: 14,
+        brakeSettleBase: 0.78,
+        leanForwardSettleFactor: 0.92,
+        settleBaseRate: 0.5,
+        settleControlScale: 0.7,
+        settleAngleRecovery: 0.45,
+        passiveDropSpeedFactor: 16,
+        passiveDropAngleRecovery: 32,
+        releaseDropBoost: 160,
+        controlDeadZone: 0.001,
+    },
+
+    balance: {
+        driftBase: 12,
+        driftSpeedFactor: 20,
+        driftWaveFreq1: 0.65,
+        driftWaveFreq2: 2.4,
+        driftWaveAmp2: 0.45,
+        driftInfluence: 0.28,
+        roadKickFreq: 3.6,
+        roadKickInfluence: 0.5,
+        minSpeedForDrift: 0.8,
+        wheelieChaosBase: 12,
+        wheelieChaosBuildRate: 16,
+        wheelieChaosCap: 34,
+        perfectChaosBonus: 10,
+        wheelieChaosFreq1: 7.5,
+        wheelieChaosFreq2: 12.5,
+        wheelieChaosMix: 0.45,
+        backFallStartAngle: 34,
+        backFallTorque: 46,
+        backFallSpeedFactor: 28,
+        backFallChaos: 18,
+    },
+
+    scoring: {
+        perfectAngle: 31,
+        perfectWindow: 6,
+        perfectMultiplier: 2.4,
+        baseScoreRate: 0.5,
+        angleScoreDivisor: 38,
+        minSpeedForValid: 2,
+    },
+
+    world: {
+        roadLength: 300,
+        roadWidth: 8,
+    },
+
+    visuals: {
+        bobFrequency: 0,
+        bobAmplitude: 0.02,
+        wheelSpinRate: 3.2,
+    },
+}

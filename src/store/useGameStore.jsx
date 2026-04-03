@@ -1,12 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useRef, useCallback, useMemo, useSyncExternalStore } from 'react'
+import { DEFAULT_GAMEPLAY_TUNING } from '../config/gameplayTuning'
 
-// ─── Game Constants ───────────────────────────────────
-export const WORLD_TUNING = {
-    roadLength: 300,
-    roadWidth: 8,
-}
-
+// ─── Compatibility re-exports sourced from the tuning schema ──
+export const WORLD_TUNING = DEFAULT_GAMEPLAY_TUNING.world
 export const INPUT_TUNING = {
     leftPadDeadZone: 0.12,
     rightPadDeadZone: 0.12,
@@ -20,67 +17,45 @@ export const INPUT_TUNING = {
     keyboardThrottleValue: 1,
     keyboardBrakeValue: 0.92,
 }
+export const DRIVE_TUNING = DEFAULT_GAMEPLAY_TUNING.drive
+export const PITCH_TUNING = DEFAULT_GAMEPLAY_TUNING.pitch
+export const SCORE_TUNING = DEFAULT_GAMEPLAY_TUNING.scoring
+export const BALANCE_TUNING = DEFAULT_GAMEPLAY_TUNING.balance
 
-export const DRIVE_TUNING = {
-    maxSpeed: 30,
-    acceleration: 11,
-    friction: 4.5,
-    brakeStrength: 8,
-}
-
-export const PITCH_TUNING = {
-    liftSpeed: 58,
-    settleSpeed: 88,
-    gravityDropSpeed: 30,
-    maxWheelieAngle: 60,
-    validWheelieMinAngle: 8,
-}
-
-export const SCORE_TUNING = {
-    wheelieScoreMultiplier: 2.4,
-    perfectWheelieAngle: 31,
-    perfectWheelieWindow: 6,
-}
-
-export const BALANCE_TUNING = {
-    driftBase: 10,
-    driftSpeedFactor: 16,
-}
-
-// Compatibility exports for the current alpha scene.
-export const ROAD_LENGTH = WORLD_TUNING.roadLength
-export const ROAD_WIDTH = WORLD_TUNING.roadWidth
-export const MAX_SPEED = DRIVE_TUNING.maxSpeed
-export const ACCELERATION = DRIVE_TUNING.acceleration
-export const FRICTION = DRIVE_TUNING.friction
-export const WHEELIE_UP_SPEED = PITCH_TUNING.liftSpeed
-export const WHEELIE_DOWN_SPEED = PITCH_TUNING.settleSpeed
-export const GRAVITY_DROP_SPEED = PITCH_TUNING.gravityDropSpeed
-export const MAX_WHEELIE_ANGLE = PITCH_TUNING.maxWheelieAngle
-export const VALID_WHEELIE_MIN_ANGLE = PITCH_TUNING.validWheelieMinAngle
-export const WHEELIE_SCORE_MULTIPLIER = SCORE_TUNING.wheelieScoreMultiplier
-export const PERFECT_WHEELIE_ANGLE = SCORE_TUNING.perfectWheelieAngle
-export const PERFECT_WHEELIE_WINDOW = SCORE_TUNING.perfectWheelieWindow
-export const BALANCE_DRIFT_BASE = BALANCE_TUNING.driftBase
-export const BALANCE_DRIFT_SPEED_FACTOR = BALANCE_TUNING.driftSpeedFactor
-export const BRAKE_STRENGTH = DRIVE_TUNING.brakeStrength
+export const ROAD_LENGTH = DEFAULT_GAMEPLAY_TUNING.world.roadLength
+export const ROAD_WIDTH = DEFAULT_GAMEPLAY_TUNING.world.roadWidth
+export const MAX_SPEED = DEFAULT_GAMEPLAY_TUNING.drive.maxSpeed
+export const ACCELERATION = DEFAULT_GAMEPLAY_TUNING.drive.acceleration
+export const FRICTION = DEFAULT_GAMEPLAY_TUNING.drive.friction
+export const BRAKE_STRENGTH = DEFAULT_GAMEPLAY_TUNING.drive.brakeStrength
+export const WHEELIE_UP_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.liftTorque
+export const WHEELIE_DOWN_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.settleTorque
+export const GRAVITY_DROP_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.gravityTorque
+export const MAX_WHEELIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.pitch.maxAngle
+export const VALID_WHEELIE_MIN_ANGLE = DEFAULT_GAMEPLAY_TUNING.pitch.validMinAngle
+export const WHEELIE_SCORE_MULTIPLIER = DEFAULT_GAMEPLAY_TUNING.scoring.perfectMultiplier
+export const PERFECT_WHEELIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.scoring.perfectAngle
+export const PERFECT_WHEELIE_WINDOW = DEFAULT_GAMEPLAY_TUNING.scoring.perfectWindow
+export const BALANCE_DRIFT_BASE = DEFAULT_GAMEPLAY_TUNING.balance.driftBase
+export const BALANCE_DRIFT_SPEED_FACTOR = DEFAULT_GAMEPLAY_TUNING.balance.driftSpeedFactor
 
 const initialState = (persisted = {}) => ({
     speed: 0,
-    wheelieAngle: 0,       // degrees: 0 = flat, 90 = vertical
-    position: 0,           // X along road
-    distance: 0,           // road progress
-    wheelieDistance: 0,    // distance while wheelie state is valid
+    wheelieAngle: 0,
+    pitchVelocity: 0,
+    position: 0,
+    distance: 0,
+    wheelieDistance: 0,
     currentWheelieDistance: 0,
-    wheelieTime: 0,        // seconds spent in wheelie
+    wheelieTime: 0,
     rawCurrentWheelieScore: 0,
     currentWheelieScore: 0,
     rawScore: 0,
     score: 0,
     bestScore: persisted.bestScore ?? 0,
-    riderWeight: 0,        // -1 = back, 1 = forward
-    throttle: 0,           // 0..1
-    brake: 0,              // 0..1
+    riderWeight: 0,
+    throttle: 0,
+    brake: 0,
     paused: false,
     wheelieValid: false,
     perfectBalance: false,

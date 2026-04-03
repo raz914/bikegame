@@ -11,6 +11,7 @@ import { returnToMenu } from '../store/useUIStore'
 import ControlPad from './game-ui/ControlPad'
 import GameHUD from './game-ui/GameHUD'
 import GameOverlays from './game-ui/GameOverlays'
+import GameplayDebugPanel from './game-ui/GameplayDebugPanel'
 import WheelieStreak from './game-ui/WheelieStreak'
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
@@ -476,6 +477,8 @@ export default function GameUI() {
             {paused && !crashed && !finished && (
                 <PauseMenu onResume={handleResume} onMenu={handleReturnToMenu} />
             )}
+
+            {!crashed && !finished && <GameplayDebugPanel />}
         </div>
     )
 }

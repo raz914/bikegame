@@ -1,25 +1,8 @@
 import { useFrame } from '@react-three/fiber'
-import {
-    ROAD_LENGTH,
-    MAX_SPEED,
-    ACCELERATION,
-    FRICTION,
-    BRAKE_STRENGTH,
-    WHEELIE_UP_SPEED,
-    WHEELIE_DOWN_SPEED,
-    GRAVITY_DROP_SPEED,
-    MAX_WHEELIE_ANGLE,
-    VALID_WHEELIE_MIN_ANGLE,
-    WHEELIE_SCORE_MULTIPLIER,
-    PERFECT_WHEELIE_ANGLE,
-    PERFECT_WHEELIE_WINDOW,
-    BALANCE_DRIFT_BASE,
-    BALANCE_DRIFT_SPEED_FACTOR,
-} from '../store/useGameStore'
+import { getGameplayTuning } from '../store/useGameplayTuningStore'
+import stepWheelieSimulation from '../utils/stepWheelieSimulation'
 
 const DEG2RAD = Math.PI / 180
-
-const clamp01 = (value) => Math.max(0, Math.min(1, value))
 
 export default function useBikeSimulation({
     store,
@@ -33,137 +16,88 @@ export default function useBikeSimulation({
         if (state.crashed || state.finished || state.paused) return
 
         const dt = Math.min(delta, 0.05)
+        const tuning = getGameplayTuning()
 
-        let {
-            speed,
-            wheelieAngle,
-            position,
-            rawScore,
-            score,
-            wheelieTime,
-            wheelieDistance,
-            currentWheelieDistance,
-            rawCurrentWheelieScore,
-            currentWheelieScore,
-            bestScore,
-        } = state
-        const throttle = clamp01(state.throttle)
-        const brake = clamp01(state.brake)
-        const riderWeight = Math.max(-1, Math.min(1, state.riderWeight))
-        const speedRatio = speed / MAX_SPEED
-        const driftWave = Math.sin(position * 0.65) + Math.sin(position * 2.4) * 0.45
-        const roadKick = Math.max(0, Math.sin(position * 3.6)) * speedRatio
-
-        if (speed > 1.5 && wheelieAngle > 0) {
-            const driftForce = (BALANCE_DRIFT_BASE + speedRatio * BALANCE_DRIFT_SPEED_FACTOR) * dt
-            wheelieAngle += driftWave * driftForce * 0.24
-            wheelieAngle += roadKick * driftForce * 0.45
+        const simState = {
+            pitchAngle: state.wheelieAngle,
+            pitchVelocity: state.pitchVelocity,
+            speed: state.speed,
+            position: state.position,
+            rawScore: state.rawScore,
+            wheelieTime: state.wheelieTime,
+            wheelieDistance: state.wheelieDistance,
+            currentWheelieDistance: state.currentWheelieDistance,
+            rawCurrentWheelieScore: state.rawCurrentWheelieScore,
         }
 
-        const backwardWeight = Math.max(-riderWeight, 0)
-        const forwardWeight = Math.max(riderWeight, 0)
-        const liftControl = throttle * (0.82 + backwardWeight * 0.78)
-        const settleControl = brake * 0.78 + forwardWeight * 0.92
-        const angleRecoveryFactor = Math.min(wheelieAngle / MAX_WHEELIE_ANGLE, 1)
-
-        if (liftControl > 0.001) {
-            const liftSpeed = WHEELIE_UP_SPEED * liftControl + speedRatio * 12 * throttle + backwardWeight * 10
-            wheelieAngle = Math.min(wheelieAngle + liftSpeed * dt, 90)
-        } else if (settleControl > 0.001) {
-            const settleSpeed = WHEELIE_DOWN_SPEED * (0.5 + settleControl * 0.7 + angleRecoveryFactor * 0.45)
-            wheelieAngle = Math.max(wheelieAngle - settleSpeed * dt, 0)
-        } else {
-            const passiveDropSpeed = GRAVITY_DROP_SPEED + speedRatio * 8 + angleRecoveryFactor * 18
-            wheelieAngle = Math.max(wheelieAngle - passiveDropSpeed * dt, 0)
+        const inputs = {
+            throttle: state.throttle,
+            brake: state.brake,
+            riderWeight: state.riderWeight,
         }
 
-        if (wheelieAngle > MAX_WHEELIE_ANGLE) {
+        const result = stepWheelieSimulation(simState, inputs, tuning, dt)
+
+        if (result.crashed) {
             store.setState({
                 crashed: true,
-                wheelieAngle: MAX_WHEELIE_ANGLE,
+                wheelieAngle: result.pitchAngle,
+                pitchVelocity: 0,
                 wheelieValid: false,
                 perfectBalance: false,
-                bestScore: Math.max(bestScore, Math.floor(rawScore)),
+                bestScore: Math.max(state.bestScore, Math.floor(result.rawScore)),
             })
             return
         }
 
-        const accelerationForce = ACCELERATION * throttle
-        const brakeForce = BRAKE_STRENGTH * brake
-        const coastingDrag = FRICTION * (throttle > 0 ? 0.35 : 1)
-        speed = Math.min(speed + accelerationForce * dt, MAX_SPEED)
-        speed = Math.max(speed - coastingDrag * dt - brakeForce * dt, 0)
-
-        if (wheelieAngle > PERFECT_WHEELIE_ANGLE + PERFECT_WHEELIE_WINDOW + 8) {
-            speed = Math.max(speed - 7 * dt, 0)
-        }
-
-        const positionDelta = speed * dt
-        position += speed * dt
-
-        if (position >= ROAD_LENGTH) {
+        if (result.finished) {
             store.setState({
                 finished: true,
-                position: ROAD_LENGTH,
+                position: result.position,
                 speed: 0,
+                pitchVelocity: 0,
                 wheelieValid: false,
                 perfectBalance: false,
-                bestScore: Math.max(bestScore, Math.floor(rawScore)),
+                bestScore: Math.max(state.bestScore, Math.floor(result.rawScore)),
             })
             return
         }
 
-        const perfectBalance = Math.abs(wheelieAngle - PERFECT_WHEELIE_ANGLE) <= PERFECT_WHEELIE_WINDOW
-        const wheelieValid = speed > 2 && wheelieAngle >= VALID_WHEELIE_MIN_ANGLE && wheelieAngle < MAX_WHEELIE_ANGLE - 4
-        let points = speed * dt * 0.5
-
-        if (wheelieValid) {
-            wheelieTime += dt
-            wheelieDistance += positionDelta
-            currentWheelieDistance += positionDelta
-            points = speed * dt * (1 + wheelieAngle / 38)
-            if (perfectBalance) {
-                points *= WHEELIE_SCORE_MULTIPLIER
-            }
-            rawCurrentWheelieScore += points
-        } else {
-            currentWheelieDistance = 0
-            rawCurrentWheelieScore = 0
-            currentWheelieScore = 0
-        }
-
-        rawScore += points
-        score = Math.floor(rawScore)
-        currentWheelieScore = Math.floor(rawCurrentWheelieScore)
-        bestScore = Math.max(bestScore, score)
+        const score = Math.floor(result.rawScore)
+        const currentWheelieScore = Math.floor(result.rawCurrentWheelieScore)
 
         store.setState({
-            speed,
-            wheelieAngle,
-            position,
-            rawScore,
+            speed: result.speed,
+            wheelieAngle: result.pitchAngle,
+            pitchVelocity: result.pitchVelocity,
+            position: result.position,
+            rawScore: result.rawScore,
             score,
-            bestScore,
-            wheelieTime,
-            wheelieDistance,
-            currentWheelieDistance,
-            rawCurrentWheelieScore,
+            bestScore: Math.max(state.bestScore, score),
+            wheelieTime: result.wheelieTime,
+            wheelieDistance: result.wheelieDistance,
+            currentWheelieDistance: result.currentWheelieDistance,
+            rawCurrentWheelieScore: result.rawCurrentWheelieScore,
             currentWheelieScore,
-            distance: Math.floor(position),
-            wheelieValid,
-            perfectBalance,
+            distance: Math.floor(result.position),
+            wheelieValid: result.wheelieValid,
+            perfectBalance: result.perfectBalance,
         })
 
+        // ── Visual transforms ──────────────────────────────
+        const speedRatio = tuning.drive.maxSpeed > 0 ? result.speed / tuning.drive.maxSpeed : 0
+
         if (bikeGroupRef.current) {
-            bikeGroupRef.current.position.x = position
-            bikeGroupRef.current.position.y = Math.sin(position * 8) * 0.02 * speedRatio
+            bikeGroupRef.current.position.x = result.position
+            bikeGroupRef.current.position.y =
+                Math.sin(result.position * tuning.visuals.bobFrequency) * tuning.visuals.bobAmplitude * speedRatio
         }
 
         if (pivotRef.current) {
-            pivotRef.current.rotation.z = wheelieAngle * DEG2RAD
+            pivotRef.current.rotation.z = result.pitchAngle * DEG2RAD
         }
 
-        const wheelSpin = speed * dt * 3.2
+        const wheelSpin = result.speed * dt * tuning.visuals.wheelSpinRate
         if (rearWheelRef.current) rearWheelRef.current.rotation.y += wheelSpin
         if (frontWheelRef.current) frontWheelRef.current.rotation.y += wheelSpin
     })
