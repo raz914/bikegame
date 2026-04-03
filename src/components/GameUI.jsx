@@ -6,9 +6,11 @@ import {
     PERFECT_WHEELIE_ANGLE,
     PERFECT_WHEELIE_WINDOW,
     INPUT_TUNING,
+    ARCADE_TUNING,
 } from '../store/useGameStore'
-import { returnToMenu } from '../store/useUIStore'
+import { returnToMenu, useUIState, GAME_MODES } from '../store/useUIStore'
 import ControlPad from './game-ui/ControlPad'
+import LaneControlPad from './game-ui/LaneControlPad'
 import GameHUD from './game-ui/GameHUD'
 import GameOverlays from './game-ui/GameOverlays'
 import GameplayDebugPanel from './game-ui/GameplayDebugPanel'
@@ -96,7 +98,10 @@ function PauseMenu({ onResume, onMenu }) {
 
 export default function GameUI() {
     const store = useGameStore()
+    const gameMode = useUIState((s) => s.selectedGameMode)
+    const isArcade = gameMode === GAME_MODES.ARCADE
     const speed = useGameState((s) => Math.floor(s.speed))
+    const finishSpeed = useGameState((s) => Math.floor(s.finishSpeed))
     const score = useGameState((s) => s.score)
     const bestScore = useGameState((s) => s.bestScore)
     const distance = useGameState((s) => s.distance)
@@ -115,6 +120,8 @@ export default function GameUI() {
     const crashed = useGameState((s) => s.crashed)
     const crashKind = useGameState((s) => s.crashKind)
     const finished = useGameState((s) => s.finished)
+    const arcadeCoins = useGameState((s) => s.arcadeCoins)
+    const laneIndex = useGameState((s) => s.laneIndex)
     const leftPointerIdRef = useRef(null)
     const rightPointerIdRef = useRef(null)
     const keyStateRef = useRef({
@@ -124,13 +131,23 @@ export default function GameUI() {
         brake: false,
     })
 
+    const switchLane = useCallback((direction) => {
+        store.setState((prev) => {
+            const maxLane = ARCADE_TUNING.laneCount - 1
+            const next = Math.max(0, Math.min(maxLane, prev.laneIndex + direction))
+            return { ...prev, laneIndex: next }
+        })
+    }, [store])
+
     const resetLeftPad = useCallback(() => {
         leftPointerIdRef.current = null
-        store.setState((prev) => ({
-            ...prev,
-            riderWeight: 0,
-        }))
-    }, [store])
+        if (!isArcade) {
+            store.setState((prev) => ({
+                ...prev,
+                riderWeight: 0,
+            }))
+        }
+    }, [store, isArcade])
 
     const resetRightPad = useCallback(() => {
         rightPointerIdRef.current = null
@@ -217,23 +234,32 @@ export default function GameUI() {
     }, [resetRightPad])
 
     const syncKeyboardControls = useCallback(() => {
-        const nextWeight =
-            keyStateRef.current.weightForward && !keyStateRef.current.weightBack
-                ? INPUT_TUNING.keyboardWeightValue
-                : keyStateRef.current.weightBack && !keyStateRef.current.weightForward
-                    ? -INPUT_TUNING.keyboardWeightValue
-                    : 0
-
         const nextThrottle = keyStateRef.current.throttle ? INPUT_TUNING.keyboardThrottleValue : 0
         const nextBrake = keyStateRef.current.brake ? INPUT_TUNING.keyboardBrakeValue : 0
 
-        store.setState((prev) => ({
-            ...prev,
-            riderWeight: nextWeight,
-            throttle: nextThrottle,
-            brake: nextBrake,
-        }))
-    }, [store])
+        if (isArcade) {
+            store.setState((prev) => ({
+                ...prev,
+                throttle: nextThrottle,
+                brake: nextBrake,
+                riderWeight: 0,
+            }))
+        } else {
+            const nextWeight =
+                keyStateRef.current.weightForward && !keyStateRef.current.weightBack
+                    ? INPUT_TUNING.keyboardWeightValue
+                    : keyStateRef.current.weightBack && !keyStateRef.current.weightForward
+                        ? -INPUT_TUNING.keyboardWeightValue
+                        : 0
+
+            store.setState((prev) => ({
+                ...prev,
+                riderWeight: nextWeight,
+                throttle: nextThrottle,
+                brake: nextBrake,
+            }))
+        }
+    }, [store, isArcade])
 
     const handleRestart = useCallback(() => {
         leftPointerIdRef.current = null
@@ -293,14 +319,22 @@ export default function GameUI() {
             if (event.key === 'ArrowLeft' || event.key === 'a') {
                 if (paused) return
                 event.preventDefault()
-                keyStateRef.current.weightBack = true
-                syncKeyboardControls()
+                if (isArcade) {
+                    if (!event.repeat) switchLane(-1)
+                } else {
+                    keyStateRef.current.weightBack = true
+                    syncKeyboardControls()
+                }
             }
             if (event.key === 'ArrowRight' || event.key === 'd') {
                 if (paused) return
                 event.preventDefault()
-                keyStateRef.current.weightForward = true
-                syncKeyboardControls()
+                if (isArcade) {
+                    if (!event.repeat) switchLane(1)
+                } else {
+                    keyStateRef.current.weightForward = true
+                    syncKeyboardControls()
+                }
             }
             if (event.key === 'r' && (crashed || finished)) {
                 handleRestart()
@@ -317,12 +351,16 @@ export default function GameUI() {
                 syncKeyboardControls()
             }
             if (event.key === 'ArrowLeft' || event.key === 'a') {
-                keyStateRef.current.weightBack = false
-                syncKeyboardControls()
+                if (!isArcade) {
+                    keyStateRef.current.weightBack = false
+                    syncKeyboardControls()
+                }
             }
             if (event.key === 'ArrowRight' || event.key === 'd') {
-                keyStateRef.current.weightForward = false
-                syncKeyboardControls()
+                if (!isArcade) {
+                    keyStateRef.current.weightForward = false
+                    syncKeyboardControls()
+                }
             }
         }
 
@@ -333,7 +371,7 @@ export default function GameUI() {
             window.removeEventListener('keydown', onKeyDown)
             window.removeEventListener('keyup', onKeyUp)
         }
-    }, [crashed, finished, handlePauseToggle, handleRestart, paused, syncKeyboardControls])
+    }, [crashed, finished, handlePauseToggle, handleRestart, paused, syncKeyboardControls, isArcade, switchLane])
 
     const progressPct = Math.min((distance / ROAD_LENGTH) * 100, 100)
     const absAngle = Math.abs(wheelieAngle)
@@ -395,9 +433,10 @@ export default function GameUI() {
                 bestScore={bestScore}
                 progressPct={progressPct}
                 angleColor={angleColor}
+                isArcade={isArcade}
+                arcadeCoins={arcadeCoins}
             />
 
-            {/* Wheelie streak display — centered below HUD */}
             <div
                 style={{
                     flex: 1,
@@ -431,24 +470,32 @@ export default function GameUI() {
                         alignItems: 'flex-end',
                     }}
                 >
-                    <ControlPad
-                        variant="weight"
-                        alignClassName=""
-                        mobileLabel="Weight"
-                        zoneLabel="Left Zone"
-                        label="Weight"
-                        readout={weightReadout}
-                        topLabel="Forward"
-                        topValue={`${Math.round(Math.abs(riderWeight) * 100)}%`}
-                        bottomLabel="Back"
-                        bottomValue="Neutral"
-                        thumbOffset={`calc(${leftThumbOffset} - 1.125rem)`}
-                        onPointerDown={handleLeftPointerDown}
-                        onPointerMove={handleLeftPointerMove}
-                        onPointerUp={handleLeftPointerEnd}
-                        onPointerCancel={handleLeftPointerEnd}
-                        onLostPointerCapture={handleLeftPointerEnd}
-                    />
+                    {isArcade ? (
+                        <LaneControlPad
+                            laneIndex={laneIndex}
+                            laneCount={ARCADE_TUNING.laneCount}
+                            onSwitchLane={switchLane}
+                        />
+                    ) : (
+                        <ControlPad
+                            variant="weight"
+                            alignClassName=""
+                            mobileLabel="Weight"
+                            zoneLabel="Left Zone"
+                            label="Weight"
+                            readout={weightReadout}
+                            topLabel="Forward"
+                            topValue={`${Math.round(Math.abs(riderWeight) * 100)}%`}
+                            bottomLabel="Back"
+                            bottomValue="Neutral"
+                            thumbOffset={`calc(${leftThumbOffset} - 1.125rem)`}
+                            onPointerDown={handleLeftPointerDown}
+                            onPointerMove={handleLeftPointerMove}
+                            onPointerUp={handleLeftPointerEnd}
+                            onPointerCancel={handleLeftPointerEnd}
+                            onLostPointerCapture={handleLeftPointerEnd}
+                        />
+                    )}
 
                     <ControlPad
                         variant="drive"
@@ -475,11 +522,13 @@ export default function GameUI() {
                 crashed={crashed}
                 crashKind={crashKind}
                 finished={finished}
-                speed={speed}
+                speed={finished ? finishSpeed : speed}
                 distance={distance}
                 score={score}
                 roadLength={ROAD_LENGTH}
                 onRestart={handleRestart}
+                isArcade={isArcade}
+                arcadeCoins={arcadeCoins}
             />
 
             {paused && !crashed && !finished && (

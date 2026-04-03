@@ -4,21 +4,25 @@ import { Sky, Stars } from '@react-three/drei'
 import { ACESFilmicToneMapping, SRGBColorSpace, Vector3 } from 'three'
 import { useGameStore, ROAD_LENGTH } from '../store/useGameStore'
 import { getGameplayTuning } from '../store/useGameplayTuningStore'
-import { useUIState } from '../store/useUIStore'
+import { useUIState, GAME_MODES } from '../store/useUIStore'
 import { STAGES } from '../data/gameData'
 import { getStageEnvironment } from '../data/stageEnvironments'
+import generateArcadeSpawns from '../utils/generateArcadeSpawns'
 import Road from './Road'
 import Bike from './Bike'
+import ArcadeProps from './ArcadeProps'
 
 function CameraRig() {
     const store = useGameStore()
+    const gameMode = useUIState((state) => state.selectedGameMode)
+    const isArcade = gameMode === GAME_MODES.ARCADE
     const cameraBlendRef = useRef(0)
     const speedRatioRef = useRef(0)
     const previousSpeedRef = useRef(0)
     const lookTargetRef = useRef(new Vector3(0, 1, 0))
 
     useFrame((state, delta) => {
-        const { position, speed, throttle, brake, wheelieAngle, paused } = store.getState()
+        const { position, speed, throttle, brake, wheelieAngle, paused, laneOffsetZ } = store.getState()
         if (paused) return
 
         const maxSpeed = getGameplayTuning().drive.maxSpeed
@@ -43,28 +47,30 @@ function CameraRig() {
         const pitchLookInfluence = wheelieAngle >= 0 ? wheelieAngle : wheelieAngle * 0.45
         const aspect = state.camera.aspect
         const portraitFactor = Math.max(0, Math.min(1, (1.15 - aspect) / 0.55))
-        const portraitRearBias = portraitFactor * 0.34
-        const portraitFocusTightness = portraitFactor * 0.22
-        const sideFollowDistance = 4.7 - portraitFactor * 0.7
-        const rearFollowDistance = 8.9 + portraitFactor * 0.75 + speedRatio * 1
+        const arcadePortraitBoost = isArcade ? portraitFactor : 0
+        const portraitRearBias = portraitFactor * 0.34 + arcadePortraitBoost * 0.42
+        const portraitFocusTightness = portraitFactor * 0.22 + arcadePortraitBoost * 0.12
+        const sideFollowDistance = 4.7 - portraitFactor * 0.7 + arcadePortraitBoost * 2
+        const rearFollowDistance = 8.9 + portraitFactor * 0.75 + speedRatio * 1 + arcadePortraitBoost * 4.2
         const followDistance = sideFollowDistance + (rearFollowDistance - sideFollowDistance) * Math.min(1, momentumBlend + portraitRearBias * 0.55)
-        const sideDepth = 9.2 - portraitFactor * 0.45 - speedRatio * 0.45
-        const rearDepth = 2.35 + portraitFactor * 0.55 - speedRatio * 0.04
+        const sideDepth = 9.2 - portraitFactor * 0.45 - speedRatio * 0.45 - arcadePortraitBoost * 1.85
+        const rearDepth = 2.35 + portraitFactor * 0.55 - speedRatio * 0.04 - arcadePortraitBoost * 0.95
         const cameraDepth = sideDepth + (rearDepth - sideDepth) * Math.min(1, momentumBlend + portraitRearBias)
-        const sideLookAhead = 6 - portraitFactor * 4.9
-        const rearLookAhead = 3.25 - portraitFactor * 1.25
+        const sideLookAhead = 6 - portraitFactor * 4.9 + arcadePortraitBoost * 0.9
+        const rearLookAhead = 3.25 - portraitFactor * 1.25 + arcadePortraitBoost * 0.7
         const lookAhead = sideLookAhead + (rearLookAhead - sideLookAhead) * Math.min(1, momentumBlend + portraitFocusTightness)
-        const baseHeight = 3.2 + portraitFactor * 1 + speedRatio * 0.2
-        const targetX = position - followDistance + portraitFactor * 0.2
+        const baseHeight = 3.2 + portraitFactor * 1 + speedRatio * 0.2 + arcadePortraitBoost * 0.85
+        const targetX = position - followDistance + portraitFactor * 0.2 - arcadePortraitBoost * 0.5
         const positionLerp = 1 - Math.exp(-dt * (3.6 - portraitFactor * 0.6))
         const lookLerp = 1 - Math.exp(-dt * (4.4 - portraitFactor * 0.75))
         const camX = state.camera.position.x + (targetX - state.camera.position.x) * positionLerp
         const camY = state.camera.position.y + ((baseHeight + speedRatio * 1.1 + pitchHeightInfluence * 0.015) - state.camera.position.y) * positionLerp
-        const camZ = state.camera.position.z + (cameraDepth - state.camera.position.z) * positionLerp
+        const targetCamZ = cameraDepth + (laneOffsetZ || 0)
+        const camZ = state.camera.position.z + (targetCamZ - state.camera.position.z) * positionLerp
 
         state.camera.position.set(camX, camY, camZ)
         lookTargetRef.current.lerp(
-            new Vector3(position + lookAhead - portraitFactor * 0.18, 1.02 + pitchLookInfluence * 0.018 + portraitFactor * 0.05, 0),
+            new Vector3(position + lookAhead - portraitFactor * 0.18, 1.02 + pitchLookInfluence * 0.018 + portraitFactor * 0.05, laneOffsetZ || 0),
             lookLerp,
         )
         state.camera.lookAt(lookTargetRef.current)
@@ -135,10 +141,17 @@ function SkySet({ environment, graphicsQuality }) {
 export default function GameScene() {
     const selectedStageIndex = useUIState((state) => state.selectedStage)
     const graphicsQuality = useUIState((state) => state.graphicsQuality)
+    const gameMode = useUIState((state) => state.selectedGameMode)
+    const isArcade = gameMode === GAME_MODES.ARCADE
     const stageId = STAGES[selectedStageIndex]?.id ?? STAGES[0].id
     const environment = useMemo(
         () => getStageEnvironment(stageId, graphicsQuality),
         [graphicsQuality, stageId],
+    )
+    const tuning = getGameplayTuning()
+    const arcadeSpawns = useMemo(
+        () => isArcade ? generateArcadeSpawns(tuning.world.roadLength, tuning.arcade) : null,
+        [isArcade, tuning.world.roadLength, tuning.arcade],
     )
     const dpr = graphicsQuality === 'low' ? [1, 1.2] : graphicsQuality === 'medium' ? [1, 1.5] : [1, 2]
 
@@ -190,7 +203,8 @@ export default function GameScene() {
 
             <CameraRig />
             <Road environment={environment} />
-            <Bike />
+            <Bike arcadeSpawns={arcadeSpawns} />
+            {isArcade && <ArcadeProps spawns={arcadeSpawns} />}
         </Canvas>
     )
 }

@@ -20,7 +20,7 @@ export default function StageSelectScreen() {
             <div className="game-header">
                 <button
                     className="game-back-btn"
-                    onClick={() => goToScreen(SCREENS.MENU)}
+                    onClick={() => goToScreen(SCREENS.MODE_SELECT)}
                 >
                     ← Back
                 </button>

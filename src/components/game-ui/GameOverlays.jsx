@@ -25,16 +25,22 @@ export default function GameOverlays({
     score,
     roadLength,
     onRestart,
+    isArcade,
+    arcadeCoins,
 }) {
     if (!crashed && !finished) return null
 
     const isCrash = crashed
     const title = isCrash ? 'CRASH!' : 'FINISH!'
     const subtitle = isCrash
-        ? crashKind === 'forward'
-            ? 'Braked too hard and tipped forward!'
-            : 'Wheel came up too far!'
-        : 'Clean run to the end!'
+        ? isArcade && crashKind === 'obstacle'
+            ? 'Hit an obstacle!'
+            : crashKind === 'forward'
+                ? 'Braked too hard and tipped forward!'
+                : 'Wheel came up too far!'
+        : isArcade
+            ? `Collected ${arcadeCoins ?? 0} coins!`
+            : 'Clean run to the end!'
     const bgColor = isCrash
         ? 'rgba(100, 15, 15, 0.65)'
         : 'rgba(10, 60, 30, 0.6)'
@@ -220,7 +226,7 @@ export default function GameOverlays({
                             borderRadius: '0.75rem',
                             padding: '0.75rem 0.5rem',
                             border: '1px solid rgba(255,255,255,0.06)',
-                            gridColumn: 'span 2',
+                            gridColumn: isArcade ? '1' : 'span 2',
                         }}
                     >
                         <div
@@ -245,6 +251,39 @@ export default function GameOverlays({
                             {speed} km/h
                         </div>
                     </div>
+                    {isArcade && (
+                        <div
+                            style={{
+                                background: 'rgba(255,213,79,0.06)',
+                                borderRadius: '0.75rem',
+                                padding: '0.75rem 0.5rem',
+                                border: '1px solid rgba(255,213,79,0.15)',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontSize: '0.55rem',
+                                    fontFamily: 'var(--font-game)',
+                                    letterSpacing: '0.18em',
+                                    textTransform: 'uppercase',
+                                    color: 'rgba(255,213,79,0.6)',
+                                }}
+                            >
+                                Coins
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: '1.3rem',
+                                    fontFamily: 'var(--font-game)',
+                                    color: '#FFD54F',
+                                    marginTop: '0.2rem',
+                                    fontVariantNumeric: 'tabular-nums',
+                                }}
+                            >
+                                {arcadeCoins ?? 0}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Buttons */}

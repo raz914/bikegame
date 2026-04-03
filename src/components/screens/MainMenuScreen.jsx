@@ -68,7 +68,7 @@ export default function MainMenuScreen() {
             >
                 <button
                     className="game-btn game-btn-primary"
-                    onClick={() => goToScreen(SCREENS.STAGE_SELECT)}
+                    onClick={() => goToScreen(SCREENS.MODE_SELECT)}
                     style={{ fontSize: '1.15rem', padding: '1rem 2rem' }}
                 >
                     <PlayIcon />

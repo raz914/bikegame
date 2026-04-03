@@ -7,7 +7,7 @@ import { createGameplayBike } from '../utils/createGameplayBike'
 
 const MODEL_URL = '/models/bikeModel.glb'
 
-export default function Bike() {
+export default function Bike({ arcadeSpawns }) {
     const bikeGroupRef = useRef()
     const pivotRef = useRef()
     const modelRootRef = useRef()
@@ -25,6 +25,7 @@ export default function Bike() {
         rearWheelRef,
         frontWheelRef,
         gameplayBike,
+        arcadeSpawns,
     })
 
     if (!gameplayBike) return null

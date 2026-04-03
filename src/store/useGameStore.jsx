@@ -39,9 +39,11 @@ export const PERFECT_WHEELIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.scoring.perfectAngl
 export const PERFECT_WHEELIE_WINDOW = DEFAULT_GAMEPLAY_TUNING.scoring.perfectWindow
 export const BALANCE_DRIFT_BASE = DEFAULT_GAMEPLAY_TUNING.balance.driftBase
 export const BALANCE_DRIFT_SPEED_FACTOR = DEFAULT_GAMEPLAY_TUNING.balance.driftSpeedFactor
+export const ARCADE_TUNING = DEFAULT_GAMEPLAY_TUNING.arcade
 
 const initialState = (persisted = {}) => ({
     speed: 0,
+    finishSpeed: 0,
     wheelieAngle: 0,
     pitchVelocity: 0,
     position: 0,
@@ -65,6 +67,11 @@ const initialState = (persisted = {}) => ({
     crashed: false,
     crashKind: null,
     finished: false,
+    // Arcade-specific
+    laneIndex: 1,
+    laneOffsetZ: 0,
+    arcadeCoins: 0,
+    collectedCoinIds: new Set(),
 })
 
 // ─── Store Context ────────────────────────────────────

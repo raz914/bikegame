@@ -10,6 +10,7 @@ import StageSelectScreen from './components/screens/StageSelectScreen'
 import RiderSelectScreen from './components/screens/RiderSelectScreen'
 import BikeSelectScreen from './components/screens/BikeSelectScreen'
 import SettingsScreen from './components/screens/SettingsScreen'
+import ModeSelectScreen from './components/screens/ModeSelectScreen'
 
 function ScreenRouter() {
     const currentScreen = useUIState((s) => s.currentScreen)
@@ -23,6 +24,8 @@ function ScreenRouter() {
             return <MainMenuScreen />
         case SCREENS.SETTINGS:
             return <SettingsScreen />
+        case SCREENS.MODE_SELECT:
+            return <ModeSelectScreen />
         case SCREENS.STAGE_SELECT:
             return <StageSelectScreen />
         case SCREENS.RIDER_SELECT:

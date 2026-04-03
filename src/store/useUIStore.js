@@ -5,10 +5,16 @@ const SCREENS = {
     WELCOME: 'welcome',
     MENU: 'menu',
     SETTINGS: 'settings',
+    MODE_SELECT: 'modeSelect',
     STAGE_SELECT: 'stageSelect',
     RIDER_SELECT: 'riderSelect',
     BIKE_SELECT: 'bikeSelect',
     GAMEPLAY: 'gameplay',
+}
+
+const GAME_MODES = {
+    CLASSIC: 'classic',
+    ARCADE: 'arcade',
 }
 
 const GRAPHICS_QUALITY = {
@@ -21,6 +27,7 @@ const listeners = new Set()
 
 let uiState = {
     currentScreen: SCREENS.LOADING,
+    selectedGameMode: GAME_MODES.CLASSIC,
     selectedStage: 0,
     selectedRider: 0,
     selectedBike: 0,
@@ -51,6 +58,11 @@ export function useUIState(selector = (state) => state) {
 
 export function goToScreen(screen) {
     uiState = { ...uiState, currentScreen: screen }
+    emitChange()
+}
+
+export function setSelectedGameMode(mode) {
+    uiState = { ...uiState, selectedGameMode: mode }
     emitChange()
 }
 
@@ -104,5 +116,5 @@ export function setGraphicsQuality(quality) {
     emitChange()
 }
 
-export { SCREENS, GRAPHICS_QUALITY }
+export { SCREENS, GAME_MODES, GRAPHICS_QUALITY }
 

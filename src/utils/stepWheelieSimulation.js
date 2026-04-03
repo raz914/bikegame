@@ -203,6 +203,7 @@ export default function stepWheelieSimulation(simState, inputs, tuning, dt) {
     // ── Position ───────────────────────────────────────────
     const positionDelta = speed * dt
     position += positionDelta
+    const finishSpeed = speed
 
     const finished = position >= world.roadLength
     if (finished) {
@@ -235,6 +236,7 @@ export default function stepWheelieSimulation(simState, inputs, tuning, dt) {
         pitchAngle,
         pitchVelocity,
         speed,
+        finishSpeed,
         position,
         positionDelta,
         rawScore,

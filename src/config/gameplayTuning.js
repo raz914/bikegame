@@ -17,7 +17,7 @@ export const DEFAULT_GAMEPLAY_TUNING = {
         gravityTorque: 160,
         angularDamping: 1,
         maxAngle: 60,
-        forwardMaxAngle: 38,
+        forwardMaxAngle: 52,
         validMinAngle: 12,
         stoppieMinAngle: 10,
         validMaxMargin: 4,
@@ -105,5 +105,18 @@ export const DEFAULT_GAMEPLAY_TUNING = {
         bobFrequency: 0,
         bobAmplitude: 0.02,
         wheelSpinRate: 3.2,
+    },
+
+    arcade: {
+        laneCount: 3,
+        laneWidth: 2.2,
+        laneSwitchSpeed: 8,
+        coinSpacing: 12,
+        coinValue: 10,
+        coinPickupRadius: 1.8,
+        obstacleSpacing: 25,
+        obstacleHitRadius: 1.2,
+        startGap: 20,
+        distanceScoreRate: 0.5,
     },
 }

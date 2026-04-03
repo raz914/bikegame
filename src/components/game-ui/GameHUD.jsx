@@ -21,6 +21,8 @@ export default function GameHUD({
     score,
     progressPct,
     angleColor,
+    isArcade,
+    arcadeCoins,
 }) {
     const showAngle = Math.abs(wheelieAngle) > 3
     const angleLabel = balanceMode === 'stoppie' ? 'STOPPIE' : 'WHEELIE'
@@ -83,7 +85,7 @@ export default function GameHUD({
                     </span>
                 </div>
 
-                {/* Center: Angle */}
+                {/* Center: Angle (classic) or Coins (arcade) */}
                 {showAngle && (
                     <div
                         style={{
@@ -137,35 +139,64 @@ export default function GameHUD({
                         )}
                     </div>
                 )}
-
-                {/* Right: Score */}
-                <div
-                    style={{
-                        background: 'rgba(0,0,0,0.45)',
-                        backdropFilter: 'blur(8px)',
-                        WebkitBackdropFilter: 'blur(8px)',
-                        borderRadius: '0.625rem',
-                        padding: '0.35rem 0.6rem',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        textAlign: 'right',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.45rem',
-                    }}
-                >
-                    <CoinIcon />
-                    <span
+                {/* Right: Score + Coins */}
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
+                    {isArcade && (
+                        <div
+                            style={{
+                                background: 'rgba(0,0,0,0.45)',
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                borderRadius: '0.625rem',
+                                padding: '0.35rem 0.6rem',
+                                border: '1px solid rgba(255,213,79,0.15)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                            }}
+                        >
+                            <CoinIcon />
+                            <span
+                                style={{
+                                    fontSize: '1rem',
+                                    fontFamily: 'var(--font-game)',
+                                    fontWeight: 700,
+                                    color: '#FFD54F',
+                                    fontVariantNumeric: 'tabular-nums',
+                                }}
+                            >
+                                {arcadeCoins}
+                            </span>
+                        </div>
+                    )}
+                    <div
                         style={{
-                            fontSize: '1.25rem',
-                            fontFamily: 'var(--font-game)',
-                            fontWeight: 900,
-                            lineHeight: 1,
-                            color: 'white',
-                            fontVariantNumeric: 'tabular-nums',
+                            background: 'rgba(0,0,0,0.45)',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)',
+                            borderRadius: '0.625rem',
+                            padding: '0.35rem 0.6rem',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            textAlign: 'right',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.45rem',
                         }}
                     >
-                        {score.toLocaleString()}
-                    </span>
+                        <CoinIcon />
+                        <span
+                            style={{
+                                fontSize: '1.25rem',
+                                fontFamily: 'var(--font-game)',
+                                fontWeight: 900,
+                                lineHeight: 1,
+                                color: 'white',
+                                fontVariantNumeric: 'tabular-nums',
+                            }}
+                        >
+                            {score.toLocaleString()}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
