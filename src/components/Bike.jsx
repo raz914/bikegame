@@ -10,6 +10,7 @@ const MODEL_URL = '/models/bikeModel.glb'
 export default function Bike() {
     const bikeGroupRef = useRef()
     const pivotRef = useRef()
+    const modelRootRef = useRef()
     const frontWheelRef = useRef()
     const rearWheelRef = useRef()
     const store = useGameStore()
@@ -20,8 +21,10 @@ export default function Bike() {
         store,
         bikeGroupRef,
         pivotRef,
+        modelRootRef,
         rearWheelRef,
         frontWheelRef,
+        gameplayBike,
     })
 
     if (!gameplayBike) return null
@@ -30,6 +33,7 @@ export default function Bike() {
         <BikeModel
             bikeGroupRef={bikeGroupRef}
             pivotRef={pivotRef}
+            modelRootRef={modelRootRef}
             rearWheelRef={rearWheelRef}
             frontWheelRef={frontWheelRef}
             gameplayBike={gameplayBike}

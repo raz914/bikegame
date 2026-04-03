@@ -39,6 +39,8 @@ function CameraRig() {
         cameraBlendRef.current += (targetRearBias - cameraBlendRef.current) * blendLerp
         const blendProgress = cameraBlendRef.current
         const momentumBlend = blendProgress * blendProgress * (3 - 2 * blendProgress)
+        const pitchHeightInfluence = wheelieAngle >= 0 ? wheelieAngle : wheelieAngle * 0.55
+        const pitchLookInfluence = wheelieAngle >= 0 ? wheelieAngle : wheelieAngle * 0.45
         const aspect = state.camera.aspect
         const portraitFactor = Math.max(0, Math.min(1, (1.15 - aspect) / 0.55))
         const portraitRearBias = portraitFactor * 0.34
@@ -57,12 +59,12 @@ function CameraRig() {
         const positionLerp = 1 - Math.exp(-dt * (3.6 - portraitFactor * 0.6))
         const lookLerp = 1 - Math.exp(-dt * (4.4 - portraitFactor * 0.75))
         const camX = state.camera.position.x + (targetX - state.camera.position.x) * positionLerp
-        const camY = state.camera.position.y + ((baseHeight + speedRatio * 1.1 + wheelieAngle * 0.015) - state.camera.position.y) * positionLerp
+        const camY = state.camera.position.y + ((baseHeight + speedRatio * 1.1 + pitchHeightInfluence * 0.015) - state.camera.position.y) * positionLerp
         const camZ = state.camera.position.z + (cameraDepth - state.camera.position.z) * positionLerp
 
         state.camera.position.set(camX, camY, camZ)
         lookTargetRef.current.lerp(
-            new Vector3(position + lookAhead - portraitFactor * 0.18, 1.02 + wheelieAngle * 0.018 + portraitFactor * 0.05, 0),
+            new Vector3(position + lookAhead - portraitFactor * 0.18, 1.02 + pitchLookInfluence * 0.018 + portraitFactor * 0.05, 0),
             lookLerp,
         )
         state.camera.lookAt(lookTargetRef.current)

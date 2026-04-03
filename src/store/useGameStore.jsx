@@ -32,6 +32,7 @@ export const WHEELIE_UP_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.liftTorque
 export const WHEELIE_DOWN_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.settleTorque
 export const GRAVITY_DROP_SPEED = DEFAULT_GAMEPLAY_TUNING.pitch.gravityTorque
 export const MAX_WHEELIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.pitch.maxAngle
+export const MAX_STOPPIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.pitch.forwardMaxAngle
 export const VALID_WHEELIE_MIN_ANGLE = DEFAULT_GAMEPLAY_TUNING.pitch.validMinAngle
 export const WHEELIE_SCORE_MULTIPLIER = DEFAULT_GAMEPLAY_TUNING.scoring.perfectMultiplier
 export const PERFECT_WHEELIE_ANGLE = DEFAULT_GAMEPLAY_TUNING.scoring.perfectAngle
@@ -57,9 +58,12 @@ const initialState = (persisted = {}) => ({
     throttle: 0,
     brake: 0,
     paused: false,
+    balanceMode: 'grounded',
     wheelieValid: false,
+    stoppieValid: false,
     perfectBalance: false,
     crashed: false,
+    crashKind: null,
     finished: false,
 })
 

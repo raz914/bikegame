@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry, DoubleSide } from 'three'
 
 const POSITION_KEY_PRECISION = 5
+const MODEL_ROTATION_X = -Math.PI / 2
 
 const getVertexCount = (geometry) => geometry?.attributes?.position?.count ?? 0
 
@@ -168,6 +169,17 @@ function buildSubGeometry(geometry, rootByVertex, includeRoot) {
     return nextGeometry
 }
 
+function rotateModelPoint([x, y, z]) {
+    const cosX = Math.cos(MODEL_ROTATION_X)
+    const sinX = Math.sin(MODEL_ROTATION_X)
+
+    return [
+        x,
+        y * cosX - z * sinX,
+        y * sinX + z * cosX,
+    ]
+}
+
 // Sketchfab merged the full bike into one mesh, so gameplay-ready wheel refs are rebuilt at load time.
 export function createGameplayBike(scene) {
     const meshes = []
@@ -210,6 +222,26 @@ export function createGameplayBike(scene) {
 
     if (!bodyGeometry || !rearWheelGeometry || !frontWheelGeometry) return null
 
+    const modelOffset = [
+        -rearWheelComponent.center[0],
+        -rearWheelComponent.min[2],
+        rearWheelComponent.center[1],
+    ]
+    const toGameplaySpace = (point) => {
+        const rotatedPoint = rotateModelPoint(point)
+        return rotatedPoint.map((value, index) => value + modelOffset[index])
+    }
+    const rearContactPoint = toGameplaySpace([
+        rearWheelComponent.center[0],
+        rearWheelComponent.center[1],
+        rearWheelComponent.min[2],
+    ])
+    const frontContactPoint = toGameplaySpace([
+        frontWheelComponent.center[0],
+        frontWheelComponent.center[1],
+        frontWheelComponent.min[2],
+    ])
+
     return {
         material: cloneBikeMaterial(mainMesh.material),
         bodyGeometry,
@@ -223,6 +255,7 @@ export function createGameplayBike(scene) {
             geometry: frontWheelGeometry,
             center: frontWheelComponent.center,
             offset: frontWheelComponent.center.map((value) => -value),
+            min: frontWheelComponent.min,
         },
         extraMeshes: meshes
             .filter((mesh) => mesh !== mainMesh)
@@ -234,10 +267,8 @@ export function createGameplayBike(scene) {
                 rotation: [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z],
                 scale: mesh.scale.toArray(),
             })),
-        modelOffset: [
-            -rearWheelComponent.center[0],
-            -rearWheelComponent.min[2],
-            rearWheelComponent.center[1],
-        ],
+        modelOffset,
+        rearContactPoint,
+        frontContactPoint,
     }
 }

@@ -18,6 +18,7 @@ const StarIcon = ({ filled }) => (
 
 export default function GameOverlays({
     crashed,
+    crashKind,
     finished,
     speed,
     distance,
@@ -29,7 +30,11 @@ export default function GameOverlays({
 
     const isCrash = crashed
     const title = isCrash ? 'CRASH!' : 'FINISH!'
-    const subtitle = isCrash ? 'Wheel came up too far!' : 'Clean run to the end!'
+    const subtitle = isCrash
+        ? crashKind === 'forward'
+            ? 'Braked too hard and tipped forward!'
+            : 'Wheel came up too far!'
+        : 'Clean run to the end!'
     const bgColor = isCrash
         ? 'rgba(100, 15, 15, 0.65)'
         : 'rgba(10, 60, 30, 0.6)'

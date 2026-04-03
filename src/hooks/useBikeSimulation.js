@@ -8,8 +8,10 @@ export default function useBikeSimulation({
     store,
     bikeGroupRef,
     pivotRef,
+    modelRootRef,
     rearWheelRef,
     frontWheelRef,
+    gameplayBike,
 }) {
     useFrame((_, delta) => {
         const state = store.getState()
@@ -43,8 +45,11 @@ export default function useBikeSimulation({
                 crashed: true,
                 wheelieAngle: result.pitchAngle,
                 pitchVelocity: 0,
+                balanceMode: result.balanceMode,
                 wheelieValid: false,
+                stoppieValid: false,
                 perfectBalance: false,
+                crashKind: result.crashKind,
                 bestScore: Math.max(state.bestScore, Math.floor(result.rawScore)),
             })
             return
@@ -56,8 +61,11 @@ export default function useBikeSimulation({
                 position: result.position,
                 speed: 0,
                 pitchVelocity: 0,
+                balanceMode: 'grounded',
                 wheelieValid: false,
+                stoppieValid: false,
                 perfectBalance: false,
+                crashKind: null,
                 bestScore: Math.max(state.bestScore, Math.floor(result.rawScore)),
             })
             return
@@ -80,8 +88,11 @@ export default function useBikeSimulation({
             rawCurrentWheelieScore: result.rawCurrentWheelieScore,
             currentWheelieScore,
             distance: Math.floor(result.position),
+            balanceMode: result.balanceMode,
             wheelieValid: result.wheelieValid,
+            stoppieValid: result.stoppieValid,
             perfectBalance: result.perfectBalance,
+            crashKind: null,
         })
 
         // ── Visual transforms ──────────────────────────────
@@ -94,7 +105,18 @@ export default function useBikeSimulation({
         }
 
         if (pivotRef.current) {
+            const pivotPoint = result.pitchAngle < 0
+                ? gameplayBike?.frontContactPoint ?? [0, 0, 0]
+                : gameplayBike?.rearContactPoint ?? [0, 0, 0]
+            pivotRef.current.position.set(pivotPoint[0], pivotPoint[1], pivotPoint[2])
             pivotRef.current.rotation.z = result.pitchAngle * DEG2RAD
+        }
+
+        if (modelRootRef.current) {
+            const pivotPoint = result.pitchAngle < 0
+                ? gameplayBike?.frontContactPoint ?? [0, 0, 0]
+                : gameplayBike?.rearContactPoint ?? [0, 0, 0]
+            modelRootRef.current.position.set(-pivotPoint[0], -pivotPoint[1], -pivotPoint[2])
         }
 
         const wheelSpin = result.speed * dt * tuning.visuals.wheelSpinRate

@@ -16,11 +16,15 @@ function CoinIcon() {
 export default function GameHUD({
     speed,
     wheelieAngle,
+    balanceMode,
     perfectBalance,
     score,
     progressPct,
     angleColor,
 }) {
+    const showAngle = Math.abs(wheelieAngle) > 3
+    const angleLabel = balanceMode === 'stoppie' ? 'STOPPIE' : 'WHEELIE'
+
     return (
         <div
             style={{
@@ -79,8 +83,8 @@ export default function GameHUD({
                     </span>
                 </div>
 
-                {/* Center: Angle (only when doing wheelie) */}
-                {wheelieAngle > 3 && (
+                {/* Center: Angle */}
+                {showAngle && (
                     <div
                         style={{
                             display: 'flex',
@@ -103,7 +107,17 @@ export default function GameHUD({
                                 fontVariantNumeric: 'tabular-nums',
                             }}
                         >
-                            {wheelieAngle}°
+                            {Math.abs(wheelieAngle)}°
+                        </span>
+                        <span
+                            style={{
+                                fontSize: '0.5rem',
+                                fontFamily: 'var(--font-game)',
+                                letterSpacing: '0.1em',
+                                color: 'rgba(255,255,255,0.45)',
+                            }}
+                        >
+                            {angleLabel}
                         </span>
                         {perfectBalance && (
                             <span

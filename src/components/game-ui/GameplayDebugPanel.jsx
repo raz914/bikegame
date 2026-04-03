@@ -27,11 +27,15 @@ const CONTROL_GROUPS = [
         group: 'pitch',
         controls: [
             { key: 'liftTorque', label: 'Lift Torque', min: 20, max: 400, step: 5 },
+            { key: 'forwardLiftTorque', label: 'Forward Lift Torque', min: 20, max: 400, step: 5 },
             { key: 'settleTorque', label: 'Settle Torque', min: 20, max: 500, step: 5 },
+            { key: 'forwardSettleTorque', label: 'Forward Settle Torque', min: 20, max: 500, step: 5 },
             { key: 'gravityTorque', label: 'Gravity Torque', min: 5, max: 300, step: 5 },
             { key: 'angularDamping', label: 'Angular Damping', min: 0.5, max: 12, step: 0.25 },
             { key: 'maxAngle', label: 'Max Angle', min: 30, max: 90, step: 1 },
+            { key: 'forwardMaxAngle', label: 'Forward Max Angle', min: 15, max: 60, step: 1 },
             { key: 'validMinAngle', label: 'Valid Min Angle', min: 1, max: 30, step: 1 },
+            { key: 'stoppieMinAngle', label: 'Stoppie Min Angle', min: 1, max: 30, step: 1 },
             { key: 'validMaxMargin', label: 'Valid Max Margin', min: 0, max: 15, step: 1 },
         ],
     },
@@ -45,14 +49,27 @@ const CONTROL_GROUPS = [
             { key: 'leanBackDirectLift', label: 'Lean Back Direct Lift', min: 0, max: 30, step: 1 },
             { key: 'launchAssistTorque', label: 'Launch Assist Torque', min: 0, max: 400, step: 5 },
             { key: 'launchAssistMaxAngle', label: 'Launch Assist Angle', min: 0, max: 30, step: 1 },
+            { key: 'brakeLiftBase', label: 'Brake Lift Base', min: 0, max: 2, step: 0.05 },
+            { key: 'forwardWeightLiftBonus', label: 'Forward Weight Lift Bonus', min: 0, max: 2, step: 0.05 },
+            { key: 'brakeLiftMinSpeedRatio', label: 'Brake Lift Min Speed', min: 0, max: 0.5, step: 0.01 },
+            { key: 'brakeSpeedLiftFactor', label: 'Brake Speed Lift Factor', min: 0, max: 40, step: 1 },
+            { key: 'forwardWeightDirectLift', label: 'Forward Weight Direct Lift', min: 0, max: 40, step: 1 },
+            { key: 'brakeLaunchAssistTorque', label: 'Brake Launch Assist', min: 0, max: 300, step: 5 },
+            { key: 'brakeLaunchAssistMaxAngle', label: 'Brake Launch Angle', min: 0, max: 20, step: 1 },
             { key: 'brakeSettleBase', label: 'Brake Settle Base', min: 0, max: 2, step: 0.05 },
             { key: 'leanForwardSettleFactor', label: 'Lean Forward Settle', min: 0, max: 2, step: 0.05 },
             { key: 'settleBaseRate', label: 'Settle Base Rate', min: 0, max: 2, step: 0.05 },
             { key: 'settleControlScale', label: 'Settle Control Scale', min: 0, max: 2, step: 0.05 },
             { key: 'settleAngleRecovery', label: 'Settle Angle Recovery', min: 0, max: 2, step: 0.05 },
+            { key: 'throttleStoppieRecoveryBase', label: 'Throttle Stoppie Recovery', min: 0, max: 2, step: 0.05 },
+            { key: 'backWeightStoppieRecoveryBonus', label: 'Back Weight Recovery', min: 0, max: 2, step: 0.05 },
+            { key: 'stoppieRecoveryBaseRate', label: 'Stoppie Recovery Base', min: 0, max: 2, step: 0.05 },
+            { key: 'stoppieRecoveryControlScale', label: 'Stoppie Recovery Control', min: 0, max: 2, step: 0.05 },
+            { key: 'stoppieRecoveryAngleScale', label: 'Stoppie Recovery Angle', min: 0, max: 2, step: 0.05 },
             { key: 'passiveDropSpeedFactor', label: 'Passive Drop Speed', min: 0, max: 30, step: 1 },
             { key: 'passiveDropAngleRecovery', label: 'Passive Drop Angle', min: 0, max: 50, step: 1 },
             { key: 'releaseDropBoost', label: 'Release Drop Boost', min: 0, max: 300, step: 5 },
+            { key: 'forwardReleaseRecoveryBoost', label: 'Forward Release Recovery', min: 0, max: 300, step: 5 },
         ],
     },
     {
@@ -79,6 +96,16 @@ const CONTROL_GROUPS = [
             { key: 'backFallTorque', label: 'Back Fall Torque', min: 0, max: 100, step: 1 },
             { key: 'backFallSpeedFactor', label: 'Back Fall Speed Factor', min: 0, max: 60, step: 1 },
             { key: 'backFallChaos', label: 'Back Fall Chaos', min: 0, max: 40, step: 1 },
+            { key: 'frontDriftBase', label: 'Front Drift Base', min: 0, max: 30, step: 1 },
+            { key: 'frontDriftSpeedFactor', label: 'Front Drift Speed', min: 0, max: 40, step: 1 },
+            { key: 'frontDriftWaveFreq1', label: 'Front Wave Freq 1', min: 0.5, max: 8, step: 0.1 },
+            { key: 'frontDriftWaveFreq2', label: 'Front Wave Freq 2', min: 0.5, max: 10, step: 0.1 },
+            { key: 'frontDriftWaveMix', label: 'Front Wave Mix', min: 0, max: 1, step: 0.05 },
+            { key: 'frontDriftInfluence', label: 'Front Drift Influence', min: 0, max: 1, step: 0.02 },
+            { key: 'frontFallStartAngle', label: 'Front Fall Start', min: 8, max: 35, step: 1 },
+            { key: 'frontFallTorque', label: 'Front Fall Torque', min: 0, max: 100, step: 1 },
+            { key: 'frontFallSpeedFactor', label: 'Front Fall Speed Factor', min: 0, max: 60, step: 1 },
+            { key: 'frontFallChaos', label: 'Front Fall Chaos', min: 0, max: 40, step: 1 },
         ],
     },
     {
@@ -165,7 +192,10 @@ function Telemetry() {
     const throttle = useGameState((s) => s.throttle)
     const brake = useGameState((s) => s.brake)
     const riderWeight = useGameState((s) => s.riderWeight)
+    const balanceMode = useGameState((s) => s.balanceMode)
+    const crashKind = useGameState((s) => s.crashKind)
     const wheelieValid = useGameState((s) => s.wheelieValid)
+    const stoppieValid = useGameState((s) => s.stoppieValid)
     const perfectBalance = useGameState((s) => s.perfectBalance)
 
     return (
@@ -179,10 +209,17 @@ function Telemetry() {
             <TelemetryRow label="Throttle" value={(throttle * 100).toFixed(0)} unit="%" />
             <TelemetryRow label="Brake" value={(brake * 100).toFixed(0)} unit="%" />
             <TelemetryRow label="Rider Weight" value={riderWeight.toFixed(2)} />
+            <TelemetryRow label="Balance Mode" value={balanceMode} />
+            <TelemetryRow label="Crash Kind" value={crashKind ?? 'none'} />
             <div className="flex gap-2 pt-1">
                 {wheelieValid && (
                     <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-300">
                         Wheelie
+                    </span>
+                )}
+                {stoppieValid && (
+                    <span className="rounded-full bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-sky-300">
+                        Stoppie
                     </span>
                 )}
                 {perfectBalance && (

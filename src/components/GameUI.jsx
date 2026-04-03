@@ -104,13 +104,16 @@ export default function GameUI() {
     const currentWheelieDistance = useGameState((s) => Math.floor(s.currentWheelieDistance))
     const currentWheelieScore = useGameState((s) => s.currentWheelieScore)
     const wheelieAngle = useGameState((s) => Math.floor(s.wheelieAngle))
+    const balanceMode = useGameState((s) => s.balanceMode)
     const riderWeight = useGameState((s) => s.riderWeight)
     const throttle = useGameState((s) => s.throttle)
     const brake = useGameState((s) => s.brake)
     const paused = useGameState((s) => s.paused)
     const perfectBalance = useGameState((s) => s.perfectBalance)
     const wheelieValid = useGameState((s) => s.wheelieValid)
+    const stoppieValid = useGameState((s) => s.stoppieValid)
     const crashed = useGameState((s) => s.crashed)
+    const crashKind = useGameState((s) => s.crashKind)
     const finished = useGameState((s) => s.finished)
     const leftPointerIdRef = useRef(null)
     const rightPointerIdRef = useRef(null)
@@ -333,7 +336,10 @@ export default function GameUI() {
     }, [crashed, finished, handlePauseToggle, handleRestart, paused, syncKeyboardControls])
 
     const progressPct = Math.min((distance / ROAD_LENGTH) * 100, 100)
-    const angleColor = wheelieAngle > 52 ? '#ef4444' : wheelieAngle > 36 ? '#f59e0b' : '#f8fafc'
+    const absAngle = Math.abs(wheelieAngle)
+    const angleColor = balanceMode === 'stoppie'
+        ? absAngle > 28 ? '#ef4444' : absAngle > 16 ? '#38bdf8' : '#f8fafc'
+        : absAngle > 52 ? '#ef4444' : absAngle > 36 ? '#f59e0b' : '#f8fafc'
     const sweetSpotText = `${PERFECT_WHEELIE_ANGLE - PERFECT_WHEELIE_WINDOW}°-${PERFECT_WHEELIE_ANGLE + PERFECT_WHEELIE_WINDOW}°`
     const leftThumbOffset = `${50 - riderWeight * 34}%`
     const rightDriveAxis = brake - throttle
@@ -379,6 +385,7 @@ export default function GameUI() {
             <GameHUD
                 speed={speed}
                 wheelieAngle={wheelieAngle}
+                balanceMode={balanceMode}
                 perfectBalance={perfectBalance}
                 score={score}
                 sweetSpotText={sweetSpotText}
@@ -401,7 +408,7 @@ export default function GameUI() {
                 }}
             >
                 <WheelieStreak
-                    key={wheelieValid ? 'wheelie-active' : 'wheelie-idle'}
+                    key={wheelieValid ? 'wheelie-active' : stoppieValid ? 'stoppie-active' : 'balance-idle'}
                     wheelieValid={wheelieValid}
                     wheelieDistance={currentWheelieDistance}
                     wheelieScore={currentWheelieScore}
@@ -466,6 +473,7 @@ export default function GameUI() {
 
             <GameOverlays
                 crashed={crashed}
+                crashKind={crashKind}
                 finished={finished}
                 speed={speed}
                 distance={distance}
